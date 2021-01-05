@@ -13,12 +13,19 @@ def Key_Stats(gather="Total Debt/Equity (mrq)"):
 
     for eachDir in stockList[1:]:
         eachFile = os.listdir(eachDir)
+        ticker = eachDir.split("\\")[1]
         if len(eachFile) > 0:
             for file in eachFile:
                 dateStamp = datetime.strptime(file, '%Y%m%d%H%M%S.html')
                 unixTime = time.mktime(dateStamp.timetuple())
-                print(dateStamp, unixTime)
-                time.sleep(15)
+                fullPath = eachDir + '/' + file
+                #print(fullPath)
+
+                source = open(fullPath, 'r').read()
+                #print(source)
+                value = source.split(gather+':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0]
+                print(ticker+":", value)
+            time.sleep(15)
 
 Key_Stats()
 
