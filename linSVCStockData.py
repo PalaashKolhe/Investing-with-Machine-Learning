@@ -46,6 +46,7 @@ def BuildDataSet():
     dataDf = pd.read_csv("key_stats.csv")
 
     #dataDf = dataDf[:100]
+    dataDf = dataDf.reindex(np.random.permutation(dataDf.index))
 
     X = np.array(dataDf[FEATURES].values) #.tolist()) # consider features only and convert to python list
     y = (dataDf["Status"].replace("underperform", 0).replace("outperform", 1).values.tolist())
@@ -83,6 +84,13 @@ def Analysis():
     # plt.xlabel("DE Ratio")
     # plt.legend()
     #plt.show()
+
+# def Randomizing():
+#     df = pd.DataFrame({"D1":range(5), "D2":range(5)})
+#     print(df)
+#     df2 = df.reindex(np.random.permutation(df.index))
+#     print(df2)
+
 
 Analysis()
 
