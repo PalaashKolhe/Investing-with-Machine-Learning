@@ -44,7 +44,7 @@ FEATURES =  ['DE Ratio',
              'Shares Short (prior month)']
 
 def BuildDataSet():
-    dataDf = pd.read_csv("Data files/key_stats_acc_perf_WITH_NA.csv")
+    dataDf = pd.read_csv("Data files/key_stats_acc_perf_NO_NA_enhanced.csv")
 
     # shuffles our data
     dataDf = utils.shuffle(dataDf)
@@ -103,7 +103,7 @@ def Analysis():
     # print("Average investment return:", str(avgStrat)+"%")
     # print("Average market return:", str(avgMarket)+"%")
 
-    dataDf = pd.read_csv("Data files/forward_sample_WITH_NA.csv")
+    dataDf = pd.read_csv("Data files/forward_sample_NO_NA.csv")
 
     dataDf = dataDf.fillna(0)
     X = np.array(dataDf[FEATURES].values.tolist())  # consider features only and convert to python list
