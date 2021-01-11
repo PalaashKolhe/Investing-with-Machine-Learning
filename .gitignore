@@ -5,7 +5,6 @@ __pycache__/
 
 auth.txt
 
-Data files/* linguist-vendored
 
 # C extensions
 *.so
