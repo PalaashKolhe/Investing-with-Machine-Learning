@@ -103,8 +103,8 @@ def Key_Stats(gather=["Total Debt/Equity",
                                ##############
                                'Status'])
 
-    sp500df = pd.read_csv("YAHOO-INDEX_GSPC.csv")
-    stockDf = pd.read_csv("stock_prices.csv")
+    sp500df = pd.read_csv("Data files/YAHOO-INDEX_GSPC.csv")
+    stockDf = pd.read_csv("Data files/stock_prices.csv")
     tickerList = []
 
     for eachDir in stockList[1:]:

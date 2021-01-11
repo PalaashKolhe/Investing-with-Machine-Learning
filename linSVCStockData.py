@@ -43,7 +43,7 @@ FEATURES =  ['DE Ratio',
              'Shares Short (prior ']
 
 def BuildDataSet():
-    dataDf = pd.read_csv("key_stats.csv")
+    dataDf = pd.read_csv("Data files/key_stats.csv")
 
     #dataDf = dataDf[:100]
     dataDf = dataDf.reindex(np.random.permutation(dataDf.index))
