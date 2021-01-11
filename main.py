@@ -7,6 +7,13 @@ from matplotlib import style
 import statistics
 style.use("ggplot")
 
+from collections import Counter
+
+import warnings
+warnings.filterwarnings("ignore")
+
+howMuchBetter = 10 # filter for how much better stock should do compared to S&P
+
 FEATURES =  ['DE Ratio',
              'Trailing P/E',
              'Price/Sales',
@@ -43,6 +50,14 @@ FEATURES =  ['DE Ratio',
              'Short % of Float',
              'Shares Short (prior month)']
 
+def StatusCalc(stock, sp500):
+    difference = stock-sp500
+    if difference > howMuchBetter:
+        return 1
+    else:
+        return 0
+
+
 def BuildDataSet():
     dataDf = pd.read_csv("Data files/key_stats_acc_perf_NO_NA_enhanced.csv")
 
@@ -51,10 +66,10 @@ def BuildDataSet():
 
     # replaces the n/a in dataframe
     dataDf = dataDf.fillna(0)
-
+    dataDf["Status2"] = list(map(StatusCalc, dataDf["stock_p_change"], dataDf["sp500_p_change"]))
 
     X = np.array(dataDf[FEATURES].values.tolist()) # consider features only and convert to python list
-    y = (dataDf["Status"]
+    y = (dataDf["Status2"]
          .replace("underperform", 0)
          .replace("outperform", 1)
          .values.tolist())
@@ -88,16 +103,16 @@ def Analysis():
             ifStrat += investReturn
 
     # predict our training exmaples
-    correctCount = np.sum(clf.predict(X[-testSize:]) == y[-testSize:])
+    # correctCount = np.sum(clf.predict(X[-testSize:]) == y[-testSize:])
     # print("Accuracy:", (correctCount / testSize) * 100)
     # print("Total Trades:", totalInvests)
     # print("Ending with Strategy:", ifStrat)
     # print("Ending with Market:", ifMarket)
 
-    compared = ((ifStrat - ifMarket) / ifMarket) * 100
-    doNothing = totalInvests * investAmount
-    avgMarket = ((ifMarket - doNothing) / doNothing) * 100
-    avgStrat = ((ifStrat - doNothing) / doNothing) * 100
+    # compared = ((ifStrat - ifMarket) / ifMarket) * 100
+    # doNothing = totalInvests * investAmount
+    # avgMarket = ((ifMarket - doNothing) / doNothing) * 100
+    # avgStrat = ((ifStrat - doNothing) / doNothing) * 100
 
     # print("Comapred to market, we earn", str(compared) + "% more")
     # print("Average investment return:", str(avgStrat)+"%")
@@ -115,8 +130,24 @@ def Analysis():
         if p == 1:
             investList.append(Z[i])
 
-    print(len(investList))
-    print(investList)
+    # print(len(investList))
+    # print(investList)
+    return investList
+
+finalList = []
+loops = 5
+
+for x in range(loops):
+    stockList = Analysis()
+    for e in stockList:
+        finalList.append(e)
+
+x = Counter(finalList)
+
+print(15*"_")
+for each in x:
+    if x[each] > loops - (loops/3):
+        print(each)
 
 Analysis()
 
