@@ -1,7 +1,7 @@
 #from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import svm, preprocessing, utils
+from sklearn import svm, preprocessing
 import pandas as pd
 from matplotlib import style
 style.use("ggplot")
@@ -40,23 +40,16 @@ FEATURES =  ['DE Ratio',
              'Shares Short (as of',
              'Short Ratio',
              'Short % of Float',
-             'Shares Short (prior month)']
+             'Shares Short (prior ']
 
 def BuildDataSet():
-    dataDf = pd.read_csv("key_stats_acc_perf_NO_NA.csv")
+    dataDf = pd.read_csv("../Data files/key_stats.csv")
 
-    # shuffles our data
-    dataDf = utils.shuffle(dataDf)
+    #dataDf = dataDf[:100]
+    dataDf = dataDf.reindex(np.random.permutation(dataDf.index))
 
-    # replaces the n/a in dataframe
-    dataDf = dataDf.fillna(0)
-
-
-    X = np.array(dataDf[FEATURES].values.tolist()) # consider features only and convert to python list
-    y = (dataDf["Status"]
-         .replace("underperform", 0)
-         .replace("outperform", 1)
-         .values.tolist())
+    X = np.array(dataDf[FEATURES].values) #.tolist()) # consider features only and convert to python list
+    y = (dataDf["Status"].replace("underperform", 0).replace("outperform", 1).values.tolist())
 
     X = preprocessing.scale(X)
 

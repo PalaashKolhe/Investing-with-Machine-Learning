@@ -1,4 +1,8 @@
 import pandas as pd
+from pandas.plotting import register_matplotlib_converters
+
+
+import numpy as np
 import os
 import time
 from datetime import datetime
@@ -9,7 +13,9 @@ from matplotlib import style
 style.use("dark_background")
 import re
 
-path = "C:/Users/kolhe/PycharmProjects/Investing-with-Machine-Learning/intraQuarter"
+path = "/intraQuarter"
+# sp500Df = pd.read_csv("C:/Users/kolhe/PycharmProjects/Investing-with-Machine-Learning/YAHOO-INDEX_GSPC.csv")
+# stockDf = pd.read_csv("C:/Users/kolhe/PycharmProjects/Investing-with-Machine-Learning/stock_prices.csv")
 # change according to where intraQuarter folder is stored
 
 def Key_Stats(gather=["Total Debt/Equity",
@@ -97,7 +103,8 @@ def Key_Stats(gather=["Total Debt/Equity",
                                ##############
                                'Status'])
 
-    sp500df = pd.read_csv("Data files/YAHOO-INDEX_GSPC.csv")
+    sp500df = pd.read_csv("../Data files/YAHOO-INDEX_GSPC.csv")
+    stockDf = pd.read_csv("../Data files/stock_prices.csv")
     tickerList = []
 
     for eachDir in stockList[1:]:
@@ -105,8 +112,8 @@ def Key_Stats(gather=["Total Debt/Equity",
         ticker = eachDir.split("\\")[1]
         tickerList.append(ticker)
 
-        startingStockValue = False
-        startingSP500Value = False
+        # startingStockValue = False
+        # startingSP500Value = False
 
         if len(eachFile) > 0:
             for file in eachFile:
@@ -135,43 +142,76 @@ def Key_Stats(gather=["Total Debt/Equity",
                             value_list.append(value)
 
                     try:
-                        sp500Date = datetime.fromtimestamp(unixTime).strftime("%Y-%m-%d")
+                        sp500Date = datetime.fromtimestamp(unixTime - 259200).strftime("%Y-%m-%d")
                         row = sp500df[(sp500df["Date"] == sp500Date)]
                         sp500Value = float(row["Adj Close"])
+                        sp500Value = round(sp500Value, 4)
                     except:
-                        sp500Date = datetime.fromtimestamp(unixTime-259200).strftime("%Y-%m-%d")
-                        row = sp500df[(sp500df["Date"] == sp500Date)]
-                        sp500Value = float(row["Adj Close"])
+                        sp500Value = np.nan
+
+                    oneYearLater = int(unixTime + 31536000)
+
                     try:
-                        stockPrice = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
+                        sp500_1y = datetime.fromtimestamp(oneYearLater).strftime("%Y-%m-%d")
+                        row = sp500_1y[(sp500df["Date"] == sp500_1y)]
+                        sp500_1y_value = float(row["Adj Close"])
+                        sp500Value = round(sp500Value, 4)
                     except Exception as e:
                         try:
-                            stockPrice = (source.split("</small><big><b>")[1].split('</b></big>')[0])
-                            stockPrice = re.search(r'(\d{1,8}\.\d{1,8})', stockPrice)
-                            stockPrice = float(stockPrice.group(1))
-                            #print(stockPrice)
+                            sp500_1y = datetime.fromtimestamp(oneYearLater - 259200).strftime("%Y-%m-%d")
+                            row = sp500df[(sp500df["Date"] == sp500_1y)]
+                            sp500_1y_value = float(row["Adj Close"])
+                            sp500Value = round(sp500Value, 4)
                         except Exception as e:
-                            stockPrice = (source.split('<span class="time_rtq_ticker"')[1].split('</span>')[0])
-                            stockPrice = re.search(r'(\d{1,8}\.\d{1,8})', stockPrice)
-                            stockPrice = float(stockPrice.group(1))
+                            print("S&P 500 exception:", str(e))
+                            sp500Value = np.nan
+
+                    try:
+                        stock_price_1y = datetime.fromtimestamp(oneYearLater).strftime("%Y-%m-%d")
+                        row = stockDf[(stockDf["Date"] == stock_price_1y)][ticker.upper()]
+                        stock_1y_value = round(float(row), 2)
+                    except Exception as e:
+                        try:
+                            stock_price_1y = datetime.fromtimestamp(oneYearLater - 259200).strftime("%Y-%m-%d")
+                            row = stockDf[(stockDf["Date"] == stock_price_1y)][ticker.upper()]
+                            stock_1y_value = round(float(row), 2)
+                        except Exception as e:
+                            stock_1y_value = np.nan
+
+                    try:
+                        stock_price = datetime.fromtimestamp(unixTime).strftime('%Y-%m-%d')
+                        print(stockDf[stock_price])
+                        row = stockDf[(stockDf["Date"] == stock_price)][ticker.upper()]
+
+                        stock_price = round(float(row), 2)
+                    except Exception as e:
+                        try:
+                            stock_price = datetime.fromtimestamp(unixTime-259200).strftime("%Y-%m-%d")
+                            row = stockDf[(stockDf["Date"] == stock_price)][ticker.upper()]
+                            stock_price = round(float(row), 2)
+                        except Exception as e:
+                            print("stock price:", str(e))
+                            stock_price = np.nan
 
 
-                    #print("stock_price:", stockPrice, "ticker:", ticker)
+                    try:
+                        stockPChange = round((((stock_1y_value - stock_price) / stock_price) * 100), 2)
+                        sp500PChange = round((((sp500_1y_value - sp500Value) / sp500Value) * 100), 2)
+                    except:
+                        stockPChange = np.nan
+                        sp500PChange = np.nan
 
-                    if not startingStockValue:
-                        startingStockValue = stockPrice
-                    if not startingSP500Value:
-                        startingSP500Value = sp500Value
-                    stockPChange = ((stockPrice - startingStockValue) / startingStockValue) * 100
-                    sp500PChange = ((sp500Value - startingSP500Value) / startingSP500Value) * 100
+                    try:
+                        difference = stockPChange-sp500PChange
+                    except:
+                        difference = np.nan
 
-                    difference = stockPChange-sp500PChange
                     if difference>0 :
                         status = 'outperform'
                     else:
                         status = 'underperform'
 
-                    if value_list.count("N/A") > 0:
+                    if value_list.count("N/A") > 0 | value_list.count(np.nan) > 0 | value_list.isnull().count() > 0:
                         pass
                     else:
 
@@ -179,7 +219,7 @@ def Key_Stats(gather=["Total Debt/Equity",
                                         'Unix': unixTime,
                                         'Ticker': ticker,
 
-                                        'Price': stockPrice,
+                                        'Price': stock_price,
                                         'stock_p_change': stockPChange,
                                         'SP500': sp500Value,
                                         'sp500_p_change': sp500PChange,
@@ -240,7 +280,8 @@ def Key_Stats(gather=["Total Debt/Equity",
     #         pass
     # plt.show()
     #
-    df.to_csv("key_stats.csv")
+
+    df.to_csv("key_stats_acc_perf_WITH_NA.csv")
 Key_Stats()
 
 
